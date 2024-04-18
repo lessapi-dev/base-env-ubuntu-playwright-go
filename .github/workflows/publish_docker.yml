@@ -1,0 +1,50 @@
+name: Publish Docker Image
+
+on:
+  push:
+    tags:
+      - '*' # Push events to matching tags
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: lessapi/base-env-ubuntu-playwright-go
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Read Tag
+        id: read_tag
+        run: echo ::set-output name=tag::${GITHUB_REF/refs\/tags\//}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.LESSAPI_DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.LESSAPI_DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Logout from DockerHub
+        run: docker logout
