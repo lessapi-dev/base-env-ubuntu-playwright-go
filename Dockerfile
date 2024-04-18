@@ -1,6 +1,5 @@
 FROM golang:1.21 as builder
-RUN PLAYWRIGHT_GO_VERSION="0.4201.1" \
-    && go install github.com/playwright-community/playwright-go/cmd/playwright@${PLAYWRIGHT_GO_VERSION}
+RUN go install github.com/playwright-community/playwright-go/cmd/playwright@0.4201.1
 
 FROM ubuntu:jammy
 COPY --from=builder /go/bin/playwright /
